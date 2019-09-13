@@ -1,4 +1,4 @@
-impa argparse
+impar argparse
 import os
 import cv2
 import sys
