@@ -1,4 +1,4 @@
-imp argparse
+impo argparse
 import os
 import cv2
 import sys
