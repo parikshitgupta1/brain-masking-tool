@@ -1,4 +1,4 @@
-# Automatic Brain M
+# Automatic Brain Ma
 
 Deep learning based proyect for the automatic masking of a fetal brain.
 Takes as input either the contents of the images directory or a directory marked with
