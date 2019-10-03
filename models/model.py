@@ -11,34 +11,37 @@ import sys, os
 # sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 bundle_dir = None
-if getattr(sys, 'frozen', False):
+if getattr(sys, "frozen", False):
     bundle_dir = sys._MEIPASS
 else:
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
 
 class MaskingModel(metaclass=abc.ABCMeta):
-    '''abstract class to guarantee children will
-    have predict_mask method'''
+    """abstract class to guarantee children will
+    have predict_mask method"""
+
     @abc.abstractmethod
     def predict_mask(self, image):
-        '''abstract method, to be implemented by child classes'''
+        """abstract method, to be implemented by child classes"""
         pass
 
+
 class Unet(MaskingModel):
-    '''Unet class to manage the loding of model and weights and
-    predictive use'''
+    """Unet class to manage the loding of model and weights and
+    predictive use"""
 
     def __init__(self):
-        '''Class constructor get json model and h5 weigths and load model'''
+        """Class constructor get json model and h5 weigths and load model"""
 
         if bundle_dir:
-            weight_path = os.path.join(bundle_dir, 'models/weights/unet_weights.h5')
-            model_path = os.path.join(bundle_dir, 'models/json_models/unet_model.json')
+            weight_path = os.path.join(bundle_dir, "models/weights/unet_weights.h5")
+            model_path = os.path.join(bundle_dir, "models/json_models/unet_model.json")
         else:
-            weight_path = 'models/weights/unet_weights.h5'
-            model_path = 'models/json_models/unet_model.json'
+            weight_path = "models/weights/unet_weights.h5"
+            model_path = "models/json_models/unet_model.json"
 
-        json_file = open(model_path, 'r')
+        json_file = open(model_path, "r")
         json_model = json_file.read()
         json_file.close()
 
@@ -46,26 +49,27 @@ class Unet(MaskingModel):
         self.unet_model.load_weights(weight_path)
 
     def __chooseMainComponent(self, image):
-        '''ChooseMainComponent function to only keep the
+        """ChooseMainComponent function to only keep the
         largest component of a prediction, removes unwanted
-        artifacts'''
+        artifacts"""
 
-        image = image.astype('uint8')
+        image = image.astype("uint8")
         # 3D image backbone
         new_image = np.zeros(image.shape)
 
         # go slice by slice of a prediction,
         # and find best component
         for i in range(image.shape[0]):
-            image_slice = image[i,:,:,:]
+            image_slice = image[i, :, :, :]
             nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(
-            image_slice, connectivity=4)
+                image_slice, connectivity=4
+            )
             sizes = stats[:, -1]
 
-            #set the label that shows the largest compont
+            # set the label that shows the largest compont
             max_label = 1
 
-            #only one component
+            # only one component
             if len(sizes) < 3:
                 return image
 
@@ -83,25 +87,24 @@ class Unet(MaskingModel):
             new_slice = new_slice[..., np.newaxis]
 
             # append 2D image to 3D image
-            new_image[i,:,:,:] = new_slice
+            new_image[i, :, :, :] = new_slice
 
         return new_image
 
     def __getGenerator(self, image, bs=1):
-        '''getGenerator Returns generator that will be used for
+        """getGenerator Returns generator that will be used for
         prdicting, it takes a single 3D image and returns a generator
-        of its slices'''
+        of its slices"""
 
         # rescale data to its trained mode
-        image_datagen = ImageDataGenerator(rescale=1./255)
-        image_datagen.fit(image, augment = True)
-        image_generator = image_datagen.flow(x = image, batch_size=bs,
-                shuffle = False)
+        image_datagen = ImageDataGenerator(rescale=1.0 / 255)
+        image_datagen.fit(image, augment=True)
+        image_generator = image_datagen.flow(x=image, batch_size=bs, shuffle=False)
 
         return image_generator
 
     def predict_mask(self, image):
-        '''predict_mask creates a prediction for a whole 3D image'''
+        """predict_mask creates a prediction for a whole 3D image"""
         image_gen = self.__getGenerator(image)
         mask = self.unet_model.predict_generator(image_gen, steps=len(image))
         # only keep pixels with more than 0.5% probability of being brain
