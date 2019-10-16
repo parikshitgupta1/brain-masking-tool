@@ -113,3 +113,4 @@ class Unet(MaskingModel):
         mask = self.__chooseMainComponent(mask)
 
         return mask
+    
