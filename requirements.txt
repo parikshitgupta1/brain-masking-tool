@@ -2,5 +2,5 @@ tqdm==4.29.1
 opencv_python_headless==4.0.0.21
 numpy==1.16.2
 MedPy==0.3.0
-Keras==2.2.4
+Keras==2.2.4 
 black==19.3b0 
