@@ -1,5 +1,5 @@
 tqdm==4.29.1
-opencv_python_headless==4.0.0.21
+opencv_python_headless==4.2.0.32
 numpy==1.16.2
 MedPy==0.3.0
 Keras==2.2.4 
